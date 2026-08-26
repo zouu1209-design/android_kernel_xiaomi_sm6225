@@ -5,16 +5,27 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
 
-      - name: Install Build Dependencies and Python 2
+      - name: Set up Python 2.7
+        uses: actions/setup-python@v5
+        with:
+          python-version: '2.7'
+
+      - name: Setup Python2 Symlink
+        run: |
+          PYTHON2_PATH=$(which python)
+          sudo ln -sf $PYTHON2_PATH /usr/bin/python2
+          sudo ln -sf $PYTHON2_PATH /usr/bin/python
+
+      - name: Install All Minimal Dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev zip curl git libncurses-dev python2 python2-dev
-          sudo ln -sf /usr/bin/python2 /usr/bin/python
+          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev zip curl git libncurses-dev pkg-config perl libopts25-dev ccache kmod e2fsprogs
 
       - name: Clone Azure Clang Toolchain
         run: |
