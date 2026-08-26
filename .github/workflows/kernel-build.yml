@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04 # স্থিতিশীল এনভায়রনমেন্টের জন্য
 
     steps:
       - name: Checkout Kernel Source
@@ -16,16 +16,14 @@ jobs:
         with:
           python-version: '2.7'
 
-      - name: Setup Python2 Symlink
+      - name: Create Python Symlink
         run: |
-          PYTHON2_PATH=$(which python)
-          sudo ln -sf $PYTHON2_PATH /usr/bin/python2
-          sudo ln -sf $PYTHON2_PATH /usr/bin/python
+          sudo ln -sf $(which python) /usr/bin/python2
 
-      - name: Install All Minimal Dependencies
+      - name: Install Build Dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev zip curl git libncurses-dev pkg-config perl libopts25-dev ccache kmod e2fsprogs
+          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev zip curl git libncurses-dev
 
       - name: Clone Azure Clang Toolchain
         run: |
