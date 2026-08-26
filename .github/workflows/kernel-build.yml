@@ -1,0 +1,52 @@
+name: Build Android Kernel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Kernel Source
+        uses: actions/checkout@v4
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev zip curl git libncurses-dev
+
+      - name: Clone Azure Clang Toolchain
+        run: |
+          git clone https://gitlab.com/Panchajanya1999/azure-clang --depth=1 clang
+
+      - name: Build Kernel
+        run: |
+          export ARCH=arm64
+          export SUBARCH=arm64
+          CLANG_DIR="$(pwd)/clang"
+
+          # Defconfig ফাইল লোড (Host GCC ব্যবহার করে)
+          make O=out vendor/fog-perf_defconfig
+
+          # কমপাইল শুরু (Clang Path সরাসরি পাস করা হয়েছে)
+          make -j$(nproc --all) O=out \
+               CC=${CLANG_DIR}/bin/clang \
+               LD=${CLANG_DIR}/bin/ld.lld \
+               AR=${CLANG_DIR}/bin/llvm-ar \
+               NM=${CLANG_DIR}/bin/llvm-nm \
+               OBJCOPY=${CLANG_DIR}/bin/llvm-objcopy \
+               OBJDUMP=${CLANG_DIR}/bin/llvm-objdump \
+               STRIP=${CLANG_DIR}/bin/llvm-strip \
+               CLANG_TRIPLE=aarch64-linux-gnu- \
+               CROSS_COMPILE=aarch64-linux-gnu- \
+               CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+
+      - name: Upload Compiled Kernel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fog-miload-Kernel
+          path: |
+            out/arch/arm64/boot/Image.gz-dtb
+            out/arch/arm64/boot/Image.gz
+            out/arch/arm64/boot/Image
+            out/arch/arm64/boot/dtbo.img
