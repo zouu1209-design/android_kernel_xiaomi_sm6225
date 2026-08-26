@@ -10,10 +10,11 @@ jobs:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
 
-      - name: Install Build Dependencies
+      - name: Install Build Dependencies and Python 2
         run: |
           sudo apt update
-          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev zip curl git libncurses-dev
+          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev zip curl git libncurses-dev python2 python2-dev
+          sudo ln -sf /usr/bin/python2 /usr/bin/python
 
       - name: Clone Azure Clang Toolchain
         run: |
@@ -25,10 +26,8 @@ jobs:
           export SUBARCH=arm64
           CLANG_DIR="$(pwd)/clang"
 
-          # Defconfig ফাইল লোড (Host GCC ব্যবহার করে)
           make O=out vendor/fog-perf_defconfig
 
-          # কমপাইল শুরু (Clang Path সরাসরি পাস করা হয়েছে)
           make -j$(nproc --all) O=out \
                CC=${CLANG_DIR}/bin/clang \
                LD=${CLANG_DIR}/bin/ld.lld \
@@ -44,9 +43,10 @@ jobs:
       - name: Upload Compiled Kernel Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Fog-miload-Kernel
+          name: Fog-Kribo-Kernel
           path: |
             out/arch/arm64/boot/Image.gz-dtb
             out/arch/arm64/boot/Image.gz
             out/arch/arm64/boot/Image
             out/arch/arm64/boot/dtbo.img
+          if-no-files-found: warn
